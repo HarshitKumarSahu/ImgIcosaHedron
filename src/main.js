@@ -1,10 +1,12 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import fragment from "../shaders/fragment.glsl";
+import fragment1 from "../shaders/fragment1.glsl";
 import vertex from "../shaders/vertex.glsl";
 import * as dat from "dat.gui";
 import gsap from "gsap";
 
+import landscape from "/1.jpg";
 class Sketch {
   constructor(options) {
     this.scene = new THREE.Scene();
@@ -19,7 +21,7 @@ class Sketch {
     });
     this.renderer.setPixelRatio(window.devicePixelRatio);
     this.renderer.setSize(this.width, this.height);
-    this.renderer.setClearColor(0xeeeeee, 1);
+    this.renderer.setClearColor("#111", 1);
     this.renderer.physicallyCorrectLights = true;
     this.renderer.outputEncoding = THREE.sRGBEncoding;
 
@@ -45,6 +47,9 @@ class Sketch {
   }
 
   addObjects() {
+    const t = new THREE.TextureLoader().load(landscape);
+    // t.wrapS = t.wrapT = new THREE.MirroredRepeatWrapping;
+    t.wrapS = t.wrapT = THREE.MirroredRepeatWrapping;
     this.material = new THREE.ShaderMaterial({
       extensions: {
         derivatives: "#extension GL_OES_standard_derivatives : enable",
@@ -52,17 +57,48 @@ class Sketch {
       side: THREE.DoubleSide,
       uniforms: {
         time: { type: "f", value: 0 },
+        landscape: { value: t },
         resolution: { type: "v4", value: new THREE.Vector4() },
         uvRate1: { value: new THREE.Vector2(1, 1) },
       },
       vertexShader: vertex,
       fragmentShader: fragment,
-      wireframe : true,
+    //   wireframe : true,
     });
 
+    this.material1 = new THREE.ShaderMaterial({
+        extensions: {
+          derivatives: "#extension GL_OES_standard_derivatives : enable",
+        },
+        side: THREE.DoubleSide,
+        uniforms: {
+          time: { type: "f", value: 0 },
+          landscape: { value: t },
+          resolution: { type: "v4", value: new THREE.Vector4() },
+          uvRate1: { value: new THREE.Vector2(1, 1) },
+        },
+        vertexShader: vertex,
+        fragmentShader: fragment1,
+      //   wireframe : true,
+      });
+
     this.geometry = new THREE.IcosahedronGeometry(1, 1);
+    this.geometry1 = new THREE.IcosahedronGeometry(1.001, 1);
+    let length = this.geometry1.attributes.position.array.length;
+    
+    let bary = [];
+
+    for(let i=0 ; i< length/3 ; i++) {
+        bary.push(0,0,1,    0,1,0,    1,0,0);
+    }
+    
+    let aBary = new Float32Array(bary);
+    this.geometry1.setAttribute("aBary",new THREE.BufferAttribute(aBary,3))
+    
     this.ico = new THREE.Mesh(this.geometry, this.material);
+    this.icoLines = new THREE.Mesh(this.geometry1, this.material1);
     this.scene.add(this.ico);
+    this.scene.add(this.icoLines);
   }
 
   settings() {
@@ -100,7 +136,9 @@ class Sketch {
 
   render() {
     if (!this.isPlaying) return;
-    this.time += 0.05;
+    this.time += 0.001;
+    this.scene.rotation.x = this.time;
+    this.scene.rotation.y = this.time;
     this.material.uniforms.time.value = this.time;
 
     this.renderer.render(this.scene, this.camera);
