@@ -6,6 +6,11 @@ import vertex from "../shaders/vertex.glsl";
 import * as dat from "dat.gui";
 import gsap from "gsap";
 
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
+import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
+import { PostProcessing } from './postprocessing';
+
 import landscape from "/1.jpg";
 class Sketch {
   constructor(options) {
@@ -40,10 +45,20 @@ class Sketch {
     this.isPlaying = true;
 
     this.addObjects();
+    this. addPost();
     this.resize();
     this.render();
     this.setupResize();
     this.settings();
+  }
+
+  addPost() {
+    this.composer = new EffectComposer(this.renderer);
+    this. composer.addPass(new RenderPass(this.scene, this.camera));
+    this.customPass = new ShaderPass( PostProcessing );
+    this.customPass.uniforms[ "resolution" ].value = new THREE.Vector2( window.innerWidth, window.innerHeight );
+    this.customPass.uniforms[ "resolution" ].value.multiplyScalar(window.devicePixelRatio); 
+    this.composer.addPass(this.customPass)
   }
 
   addObjects() {
@@ -103,12 +118,13 @@ class Sketch {
 
   settings() {
     this.settings = {
-      progress: 0,
+        howmuchrgb: 0.3,
     };
     this.gui = new dat.GUI();
-    this.gui.add(this.settings, "progress", 0, 1, 0.01).onChange((value) => {
-      this.material.uniforms.progress.value = value;
-    });
+    // this.gui.add(this.settings, "howmuchrgb", 0, 1, 0.01).onChange((value) => {
+    //   this.material.uniforms.progress.value = value;
+    // });
+    this.gui.add(this.settings, "howmuchrgb", 0, 1, 0.01);
   }
 
   setupResize() {
@@ -119,6 +135,7 @@ class Sketch {
     this.width = this.container.offsetWidth;
     this.height = this.container.offsetHeight;
     this.renderer.setSize(this.width, this.height);
+    this.composer.setSize(this.width, this.height);
     this.camera.aspect = this.width / this.height;
     this.camera.updateProjectionMatrix();
   }
@@ -140,8 +157,12 @@ class Sketch {
     this.scene.rotation.x = this.time;
     this.scene.rotation.y = this.time;
     this.material.uniforms.time.value = this.time;
+    this.material1.uniforms.time.value = this.time;
+    this.customPass.uniforms.time.value = this.time;
+    this.customPass.uniforms.howmuchrgb.value = this.settings.howmuchrgb;
 
-    this.renderer.render(this.scene, this.camera);
+    // this.renderer.render(this.scene, this.camera);
+    this.composer.render();
     requestAnimationFrame(this.render.bind(this));
   }
 }

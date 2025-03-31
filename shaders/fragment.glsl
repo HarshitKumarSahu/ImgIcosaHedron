@@ -24,6 +24,8 @@ void main() {
                    sign(rand.y - .5) * 1. + (rand.y - .5) * 0.6
                   );
 
+  float fresnel = pow(1. + dot(eyeVector , normal) , 2.);
+  
   vec2 uv = uvv * gl_FragCoord.xy / vec2(1000.);
 
   vec3 refracted = refract(eyeVector , normal , 1./3.);
@@ -33,8 +35,9 @@ void main() {
   
   vec4 t = texture2D(landscape, uv);
 
-  gl_FragColor = vec4(vBary, 1.0);
-  // gl_FragColor = t;
+  // gl_FragColor = vec4(vBary, 1.0);
+  gl_FragColor = t * (1. - fresnel);
   // gl_FragColor = vec4(diffusion);
   // gl_FragColor = vec4(eyeVector, 1.);
+  // gl_FragColor = vec4(vec3(fresnel), 1.);
 }

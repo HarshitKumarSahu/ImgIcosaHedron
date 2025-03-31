@@ -9,12 +9,18 @@ varying vec3 vBary;
 float PI = 3.141592653589793238;
 
 vec2 hash22(vec2 p) {
-  p = fract(p * vec2(5.3983, 5.4427));
-  p += dot(p.yx, p.xy + vec2(21.5351, 14.3137));
-  return fract(vec2(p.x * p.y * 95.4337, p.x * p.y * 97.597));
+    p = fract(p * vec2(5.3983, 5.4427));
+    p += dot(p.yx, p.xy + vec2(21.5351, 14.3137));
+    return fract(vec2(p.x * p.y * 95.4337, p.x * p.y * 97.597));
 }
 
 void main() {
-  gl_FragColor = vec4(vBary, 1.0);
+    float width = 3.;
+    vec3 d = fwidth(vBary);
+    vec3 s = smoothstep(d * (width + 0.5), d * (width - 0.5), vBary);
+    float line = max(s.x, max(s.y, s.z));
+    if(line < 0.1) discard;
+
+    gl_FragColor = vec4(mix(vec3(1.) , vec3(0.), 1. - line), 1.0);
 
 }
