@@ -11,7 +11,7 @@ import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
 import { PostProcessing } from './postprocessing';
 
-import landscape from "/1.jpg";
+import landscape from "/6.jpg";
 class Sketch {
   constructor(options) {
     this.scene = new THREE.Scene();
@@ -43,13 +43,28 @@ class Sketch {
 
     this.time = 0;
     this.isPlaying = true;
+    this.mouse = 0;
 
     this.addObjects();
+    this.mouseEvent();
     this. addPost();
     this.resize();
     this.render();
     this.setupResize();
     this.settings();
+  }
+
+  mouseEvent() {
+    this.lastX = 0;
+    this.lastY = 0;
+    this.speed = 0;
+
+    document.addEventListener("mousemove", (e)=>{
+        this.speed = Math.sqrt((e.pageX - this.lastX)**2 + (e.pageY - this.lastY)**2)*0.1;
+        this.lastX = e.pageX
+        this.lastY = e.pageY
+        // console.log(this.speed)
+    })
   }
 
   addPost() {
@@ -72,6 +87,7 @@ class Sketch {
       side: THREE.DoubleSide,
       uniforms: {
         time: { type: "f", value: 0 },
+        mouse: { type: "f", value: 0 },
         landscape: { value: t },
         resolution: { type: "v4", value: new THREE.Vector4() },
         uvRate1: { value: new THREE.Vector2(1, 1) },
@@ -88,6 +104,7 @@ class Sketch {
         side: THREE.DoubleSide,
         uniforms: {
           time: { type: "f", value: 0 },
+          mouse: { type: "f", value: 0 },
           landscape: { value: t },
           resolution: { type: "v4", value: new THREE.Vector4() },
           uvRate1: { value: new THREE.Vector2(1, 1) },
@@ -118,7 +135,7 @@ class Sketch {
 
   settings() {
     this.settings = {
-        howmuchrgb: 0.3,
+        howmuchrgb: 1,
     };
     this.gui = new dat.GUI();
     // this.gui.add(this.settings, "howmuchrgb", 0, 1, 0.01).onChange((value) => {
@@ -154,13 +171,17 @@ class Sketch {
   render() {
     if (!this.isPlaying) return;
     this.time += 0.001;
+    this.mouse -= (this.mouse - this.speed)*0.05;
+    // this.speed *= 0.55
     this.scene.rotation.x = this.time;
     this.scene.rotation.y = this.time;
     this.material.uniforms.time.value = this.time;
     this.material1.uniforms.time.value = this.time;
+    this.material.uniforms.mouse.value = this.mouse;
+    this.material1.uniforms.mouse.value = this.mouse;
     this.customPass.uniforms.time.value = this.time;
-    this.customPass.uniforms.howmuchrgb.value = this.settings.howmuchrgb;
-
+    // this.customPass.uniforms.howmuchrgb.value = this.settings.howmuchrgb;
+    this.customPass.uniforms.howmuchrgb.value = this.mouse / 5;
     // this.renderer.render(this.scene, this.camera);
     this.composer.render();
     requestAnimationFrame(this.render.bind(this));

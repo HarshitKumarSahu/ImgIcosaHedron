@@ -42,7 +42,7 @@ const PostProcessing = {
         color = vec3(color1.r , color.g , color2.b);
 
          //noise
-        float val = hash(vUv + time) * 0.3;
+        float val = hash(vUv + time) * 0.25;
 
 
         vec2 dxy = pixelSize / resolution;
@@ -50,7 +50,7 @@ const PostProcessing = {
 
         // gl_FragColor = texture2D(tDiffuse, vUv);
         // gl_FragColor = vec4(val);
-        gl_FragColor = vec4(color , 1.);
+        gl_FragColor = vec4(color + vec3(val) , 1.);
       }
     `,
   };
